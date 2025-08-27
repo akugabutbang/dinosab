@@ -1,4 +1,4 @@
-<!DOCTYPE<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -12,7 +12,7 @@
     }
     canvas {
       background: #fff;
-      display: none; /* awalnya disembunyikan */
+      display: none;
       margin: 0;
       border: 2px solid #000;
       width: 100%;
@@ -24,11 +24,20 @@
       padding: 15px 30px;
       cursor: pointer;
     }
+    #warning {
+      display: none;
+      margin-top: 50px;
+      font-size: 22px;
+      color: red;
+      font-weight: bold;
+    }
   </style>
 </head>
 <body>
-  <h2 id="title">Bantu sabila menghindari seblak</h2>
+  <h2 id="title">Bantu sabila menghindari seblak
+  </h2>
   <button id="startBtn">▶️ Start Game</button>
+  <div id="warning">⚠️ Silakan putar HP ke mode landscape untuk bermain!</div>
   <canvas id="gameCanvas" width="800" height="200"></canvas>
 
   <script>
@@ -36,6 +45,7 @@
     const ctx = canvas.getContext("2d");
     const startBtn = document.getElementById("startBtn");
     const title = document.getElementById("title");
+    const warning = document.getElementById("warning");
 
     // --- Player ---
     let playerImg = new Image();
@@ -65,7 +75,6 @@
     document.addEventListener("keydown", e => {
       if (e.code === "Space") jump();
     });
-
     canvas.addEventListener("click", jump);
     document.addEventListener("touchstart", jump);
 
@@ -133,6 +142,26 @@
       requestAnimationFrame(update);
     }
 
+    // --- Cek orientasi ---
+    function checkOrientation() {
+      if (window.innerHeight > window.innerWidth) {
+        // Mode portrait → larang
+        warning.style.display = "block";
+        startBtn.style.display = "none";
+        canvas.style.display = "none";
+        title.style.display = "block";
+        gameStarted = false;
+      } else {
+        // Mode landscape → izinkan
+        warning.style.display = "none";
+        startBtn.style.display = "inline-block";
+      }
+    }
+
+    window.addEventListener("resize", checkOrientation);
+    window.addEventListener("orientationchange", checkOrientation);
+    checkOrientation();
+
     // --- Start game & fullscreen ---
     startBtn.addEventListener("click", () => {
       if (canvas.requestFullscreen) {
@@ -140,7 +169,6 @@
       } else if (canvas.webkitRequestFullscreen) {
         canvas.webkitRequestFullscreen(); // Safari
       }
-
       startBtn.style.display = "none";
       title.style.display = "none";
       canvas.style.display = "block";
