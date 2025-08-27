@@ -1,79 +1,124 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
   <meta charset="UTF-8">
-  <meta http-equiv="X-UA-Compatible" content="IE=edge">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="stylesheet" href="./style.css">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@300;400;500;600;700;800&family=VT323&display=swap"
-    rel="stylesheet">
-  <title>Dino-game</title>
+  <title>Foto Dino Game</title>
+  <style>
+    body {
+      margin: 0;
+      background: #f7f7f7;
+      font-family: monospace;
+      text-align: center;
+    }
+    canvas {
+      background: #fff;
+      display: block;
+      margin: 20px auto;
+      border: 2px solid #000;
+    }
+  </style>
 </head>
-
 <body>
-  <main class="main">
+  <h2>Game Lompat dengan Foto Saya 🏃</h2>
+  <canvas id="gameCanvas" width="800" height="200"></canvas>
 
-    <header class="header">
-      <h1 class="header__title">Dino-game</h1>
-      <img class="header__icon" src="./img/fossil.png" alt="dino game logo">
-    </header>
+  <script>
+    const canvas = document.getElementById("gameCanvas");
+    const ctx = canvas.getContext("2d");
 
-    <section class="page page-start active " aria-label="page start">
-      <div class="page__item">
-        <h2 class="page__title">Welcome to the game!</h2>
-        <p class="page__subtitle">Are you ready ?</p>
-        <div class="main__btn-box">
-          <button class="game__btn game__btn-yes "> <img class="game__icon-btn" src="./img/dinosaur-yes.png"
-              alt="btn-exit">Yes</button>
-          <button class="game__btn  game__btn-no"> <img class="game__icon-btn" src="./img/egg-no.png"
-              alt="btn-exit">No</button>
-        </div>
-      </div>
-    </section>
+    // --- Player (foto kamu) ---
+    let playerImg = new Image();
+    playerImg.src = "t-rex.gif"; // Foto kamu PNG transparan
 
-    <section class="page page-end" aria-label="page end">
-      <div class="page__item">
-        <h2 class="page__title">Goodbye</h2>
-        <p class="page__subtitle">you'll be back...</p>
-        <img class="page__icon" src="./img/dinosaur-skeleton.png" alt="page icon">
-        <button class="game__btn game__btn-back"> <img class="game__icon-btn" src="./img/exit.png" alt="btn-exit">Go
-          back</button>
-      </div>
-    </section>
+    let player = { x: 50, y: 150, width: 50, height: 50, dy: 0, jump: false };
 
-    <section class="page page-final " aria-label="page end">
-      <div class="page__item">
-        <img class="game__is-over" src="./img/videogame.png" alt="btn-return">
-        <!-- <span class="game__score">You score</span> -->
-        <button class="game__btn game__btn-return "><img class="game__icon-btn" src="./img/dino-foot.png"
-            alt="btn play again">Play again</button>
-        <!-- <button class="game__btn "> <img class="game__icon-btn" src="./img/exit.png" alt="btn-exit">Exit
-          game</button> -->
-      </div>
-    </section>
+    let gravity = 0.6;
+    let ground = 150;
 
-    <section class="game__box" id="game" aria-label="game page">
-      <div class="game">
-        <div id="dino"></div>
-        <div id="cactus"></div>
-        <span class="game__score">You score: 0</span>
-      </div>
-      <div class="main__btn-box">
-        <button class="game__btn game__btn-jump"> <img class="game__icon-btn" src="./img/dino-foot.png"
-            alt="btn jump">Jump</button>
-        <button class="game__btn game__btn-quit "> <img class="game__icon-btn" src="./img/exit.png" alt="btn-exit">Exit
-          game</button>
-      </div>
-    </section>
+    // --- Cactus pakai foto sendiri ---
+    let cactusImg = new Image();
+    cactusImg.src = "cacti.png"; // ganti dengan foto cactus kamu (PNG transparan)
 
+    let obstacles = [];
 
+    // --- Clouds ---
+    let clouds = [{x: 300, y: 40}, {x: 600, y: 70}];
 
-    <script type="text/javascript" src="./script.js"></script>
-  </main>
+    // --- Score ---
+    let score = 0;
 
+    // Kontrol lompat
+    document.addEventListener("keydown", e => {
+      if (e.code === "Space" && !player.jump) {
+        player.dy = -12;
+        player.jump = true;
+      }
+    });
+
+    // Spawn cactus
+    function spawnObstacle() {
+      obstacles.push({ x: 800, y: 160, width: 40, height: 40 });
+    }
+    setInterval(spawnObstacle, 2000);
+
+    // Loop game
+    function update() {
+      ctx.clearRect(0,0,800,200);
+
+      // --- Tanah ---
+      ctx.fillStyle = "#000";
+      ctx.fillRect(0, ground+1, 800, 2);
+
+      // --- Clouds ---
+      ctx.fillStyle = "gray";
+      clouds.forEach(cl => {
+        ctx.beginPath();
+        ctx.arc(cl.x, cl.y, 20, 0, Math.PI*2);
+        ctx.arc(cl.x+25, cl.y+10, 20, 0, Math.PI*2);
+        ctx.arc(cl.x-25, cl.y+10, 20, 0, Math.PI*2);
+        ctx.fill();
+        cl.x -= 1;
+        if(cl.x < -50) cl.x = 850;
+      });
+
+      // --- Player ---
+      player.y += player.dy;
+      if (player.y < ground) {
+        player.dy += gravity;
+      } else {
+        player.y = ground;
+        player.dy = 0;
+        player.jump = false;
+      }
+      ctx.drawImage(playerImg, player.x, player.y - player.height, player.width, player.height);
+
+      // --- Obstacles (pakai foto cactus) ---
+      for (let i=0;i<obstacles.length;i++) {
+        let o = obstacles[i];
+        o.x -= 5;
+        ctx.drawImage(cactusImg, o.x, o.y - o.height, o.width, o.height);
+
+        // Collision
+        if (
+          player.x < o.x + o.width &&
+          player.x + player.width > o.x &&
+          player.y >= o.y - o.height
+        ) {
+          alert("Game Over! Skor kamu: " + score);
+          document.location.reload();
+        }
+      }
+
+      // --- Score ---
+      score++;
+      ctx.fillStyle = "black";
+      ctx.font = "20px monospace";
+      ctx.fillText("SCORE: " + score, 650, 30);
+
+      requestAnimationFrame(update);
+    }
+
+    update();
+  </script>
 </body>
-
 </html>
